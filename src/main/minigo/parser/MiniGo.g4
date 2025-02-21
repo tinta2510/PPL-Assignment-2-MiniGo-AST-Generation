@@ -362,9 +362,9 @@ mulExpr: mulExpr mulOp = (STAR | SLASH | MOD) unaryExpr | unaryExpr ;
 unaryExpr: unaryOp = (PLUS | MINUS | NOT) unaryExpr | primaryExpr ;
 
 primaryExpr
-    : operand                               #operand
-    | primaryExpr fieldAccess               #fieldAccess
-    | primaryExpr arrayAccess               #arrayAccess
+    : operand                               #operandExpr
+    | primaryExpr fieldAccess               #fieldAccessExpr
+    | primaryExpr arrayAccess               #arrayAccessExpr
     | primaryExpr arguments                 #functionCall
     | primaryExpr DOT IDENTIFIER arguments  #methodCall
     ; 
