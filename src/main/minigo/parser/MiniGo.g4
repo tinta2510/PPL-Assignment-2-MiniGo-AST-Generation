@@ -222,11 +222,9 @@ returnType: type_;
 
 parameterDeclList: nonNullParameterDeclList | ; // nullable
 
-nonNullParameterDeclList: parameterDecl COMMA nonNullParameterDeclList | typedParameterDecl ;
+nonNullParameterDeclList: identifierList type_ COMMA nonNullParameterDeclList | identifierList type_ ;
 
-parameterDecl: typedParameterDecl | IDENTIFIER ;
-
-typedParameterDecl: IDENTIFIER type_ ;
+identifierList: IDENTIFIER | identifierList COMMA IDENTIFIER ;
 
 block: L_BRACE stmtList R_BRACE ; 
 

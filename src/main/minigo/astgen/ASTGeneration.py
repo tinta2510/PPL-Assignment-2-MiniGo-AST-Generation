@@ -4,175 +4,227 @@ from AST import *
 
 class ASTGeneration(MiniGoVisitor):
 
-    # Visit a parse tree produced by MiniGoParser#program.
+    # program  : declList EOF ;
     def visitProgram(self, ctx:MiniGoParser.ProgramContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.declList())
 
-
-    # Visit a parse tree produced by MiniGoParser#declList.
+    # declList: decl | declList decl;
     def visitDeclList(self, ctx:MiniGoParser.DeclListContext):
-        return self.visitChildren(ctx)
+        if ctx.declList():
+            return self.visit(ctx.declList()) + [self.visit(ctx.decl())]
+        else:
+            return [self.visit(ctx.decl())]
 
-
-    # Visit a parse tree produced by MiniGoParser#decl.
+    # decl: declBody eos ;
     def visitDecl(self, ctx:MiniGoParser.DeclContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.declBody())
 
-
-    # Visit a parse tree produced by MiniGoParser#declBody.
+    # declBody: varDecl | constDecl | funcDecl | methodDefine | structDecl | interfaceDecl ;
     def visitDeclBody(self, ctx:MiniGoParser.DeclBodyContext):
-        return self.visitChildren(ctx)
+        if ctx.varDecl():
+            return self.visit(ctx.varDecl())
+        elif ctx.constDecl():
+            return self.visit(ctx.constDecl())
+        elif ctx.funcDecl():
+            return self.visit(ctx.funcDecl()) 
+        elif ctx.methodDefine():
+            return self.visit(ctx.methodDefine())
+        elif ctx.structDecl():
+            return self.visit(ctx.structDecl())
+        elif ctx.interfaceDecl():
+            return self.visit(ctx.interfaceDecl())
 
-
-    # Visit a parse tree produced by MiniGoParser#varDecl.
+    # varDecl: varDeclWithInit | VAR IDENTIFIER type_ ;
     def visitVarDecl(self, ctx:MiniGoParser.VarDeclContext):
-        return self.visitChildren(ctx)
+        if ctx.varDeclWithInit():
+            return self.visit(ctx.varDeclWithInit())
+        else:
+            return VarDecl(ctx.IDENTIFIER().getText(), self.visit(ctx.type_()), None)
 
-
-    # Visit a parse tree produced by MiniGoParser#varDeclWithInit.
+    # varDeclWithInit: VAR IDENTIFIER type_ initilization | VAR IDENTIFIER initilization;
     def visitVarDeclWithInit(self, ctx:MiniGoParser.VarDeclWithInitContext):
-        return self.visitChildren(ctx)
+        if ctx.type_():
+            return VarDecl(ctx.IDENTIFIER().getText(), self.visit(ctx.type_()), 
+                           self.visit(ctx.initilization()))
+        else:
+            return VarDecl(ctx.IDENTIFIER().getText(), None, 
+                           self.visit(ctx.initilization()))
 
-
-    # Visit a parse tree produced by MiniGoParser#type_.
+    # type_: IDENTIFIER | STRING | INT | FLOAT | BOOLEAN | arrayType ;
     def visitType_(self, ctx:MiniGoParser.Type_Context):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by MiniGoParser#initilization.
+        if ctx.IDENTIFIER():
+            return StructType(ctx.IDENTIFIER().getText(), [], []) #???
+        elif ctx.STRING():
+            return StringType()
+        elif ctx.INT():
+            return IntType()
+        elif ctx.FLOAT():
+            return FloatType()
+        elif ctx.BOOLEAN():
+            return BoolType()
+        elif ctx.arrayType():
+            return self.visit(ctx.arrayType())
+        
+    # initilization: ASSIGN expression ;
     def visitInitilization(self, ctx:MiniGoParser.InitilizationContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.expression())
 
-
-    # Visit a parse tree produced by MiniGoParser#constDecl.
+    # constDecl: CONST IDENTIFIER initilization ;
     def visitConstDecl(self, ctx:MiniGoParser.ConstDeclContext):
-        return self.visitChildren(ctx)
+        return ConstDecl(ctx.IDENTIFIER().getText(), None, self.visit(ctx.initilization()))
 
-
-    # Visit a parse tree produced by MiniGoParser#funcDecl.
+    # funcDecl: FUNC IDENTIFIER signature block ;
     def visitFuncDecl(self, ctx:MiniGoParser.FuncDeclContext):
-        return self.visitChildren(ctx)
+        params, returnType = self.visit(ctx.signature())
+        return FuncDecl(
+            ctx.IDENTIFIER().getText(), 
+            params, 
+            returnType,
+            self.visit(ctx.block())
+        )
 
-
-    # Visit a parse tree produced by MiniGoParser#signature.
+    # signature: parameterList returnType | parameterList ;
     def visitSignature(self, ctx:MiniGoParser.SignatureContext):
-        return self.visitChildren(ctx)
+        if ctx.returnType():
+            return self.visit(ctx.parameterList()), self.visit(ctx.returnType())
+        else:
+            return self.visit(ctx.parameterList()), VoidType()
 
-
-    # Visit a parse tree produced by MiniGoParser#parameterList.
+    # parameterList: L_PAREN parameterDeclList R_PAREN ;
     def visitParameterList(self, ctx:MiniGoParser.ParameterListContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.parameterDeclList())
 
-
-    # Visit a parse tree produced by MiniGoParser#returnType.
+    # returnType: type_;
     def visitReturnType(self, ctx:MiniGoParser.ReturnTypeContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.type_())
 
-
-    # Visit a parse tree produced by MiniGoParser#parameterDeclList.
+    # parameterDeclList: nonNullParameterDeclList | ;
     def visitParameterDeclList(self, ctx:MiniGoParser.ParameterDeclListContext):
-        return self.visitChildren(ctx)
+        if ctx.nonNullParameterDeclList():
+            return self.visit(ctx.nonNullParameterDeclList())
+        else:
+            return []
 
-
-    # Visit a parse tree produced by MiniGoParser#nonNullParameterDeclList.
+    # nonNullParameterDeclList: parameterDecl COMMA nonNullParameterDeclList | typedParameterDecl ;
     def visitNonNullParameterDeclList(self, ctx:MiniGoParser.NonNullParameterDeclListContext):
-        return self.visitChildren(ctx)
+        if ctx.parameterDecl():
+            return [self.visit(ctx.parameterDecl())] + self.visit(ctx.nonNullParameterDeclList())
+        else:
+            return [self.visit(ctx.typedParameterDecl())]
 
-
-    # Visit a parse tree produced by MiniGoParser#parameterDecl.
+    # parameterDecl: typedParameterDecl | IDENTIFIER ;
     def visitParameterDecl(self, ctx:MiniGoParser.ParameterDeclContext):
-        return self.visitChildren(ctx)
+        if ctx.typedParameterDecl():
+            return self.visit(ctx.typedParameterDecl())
+        else:
+            return VarDecl(ctx.IDENTIFIER().getText(), None, None) #???
 
-
-    # Visit a parse tree produced by MiniGoParser#typedParameterDecl.
+    # typedParameterDecl: IDENTIFIER type_ ;
     def visitTypedParameterDecl(self, ctx:MiniGoParser.TypedParameterDeclContext):
-        return self.visitChildren(ctx)
+        return VarDecl(ctx.IDENTIFIER().getText(), self.visit(ctx.type_()), None)
 
-
-    # Visit a parse tree produced by MiniGoParser#block.
+    # block: L_BRACE stmtList R_BRACE ; 
     def visitBlock(self, ctx:MiniGoParser.BlockContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by MiniGoParser#stmtList.
+        return Block(self.visit(ctx.stmtList())) #???
+    
+    # stmtList: nonNullStmtList | ;
     def visitStmtList(self, ctx:MiniGoParser.StmtListContext):
-        return self.visitChildren(ctx)
+        if ctx.nonNullStmtList():
+            return self.visit(ctx.nonNullStmtList())
+        else:
+            return []
 
-
-    # Visit a parse tree produced by MiniGoParser#nonNullStmtList.
+    # nonNullStmtList: stmt | nonNullStmtList stmt ;
     def visitNonNullStmtList(self, ctx:MiniGoParser.NonNullStmtListContext):
-        return self.visitChildren(ctx)
+        if ctx.nonNullStmtList():
+            return self.visit(ctx.nonNullStmtList()) + [self.visit(ctx.stmt())]
+        else:
+            return [self.visit(ctx.stmt())]
 
-
-    # Visit a parse tree produced by MiniGoParser#methodDefine.
+    # methodDefine: FUNC receiver IDENTIFIER signature block ;
     def visitMethodDefine(self, ctx:MiniGoParser.MethodDefineContext):
-        return self.visitChildren(ctx)
+        params, returnType = self.visit(ctx.signature())
+        receiverName, receiverType = self.visit(ctx.receiver())
+        return MethodDecl(
+            receiverName, # receiver
+            receiverType, # recType
+            FuncDecl(
+                ctx.IDENTIFIER().getText(), 
+                params, 
+                returnType,
+                self.visit(ctx.block())
+            )
+        )
 
-
-    # Visit a parse tree produced by MiniGoParser#receiver.
+    # receiver: L_PAREN IDENTIFIER receiverType R_PAREN ;
     def visitReceiver(self, ctx:MiniGoParser.ReceiverContext):
-        return self.visitChildren(ctx)
+        '''Result: (receiverName, receiverType)'''
+        return ctx.IDENTIFIER().getText(), self.visit(ctx.receiverType())
 
-
-    # Visit a parse tree produced by MiniGoParser#receiverType.
+    # receiverType: IDENTIFIER ;
     def visitReceiverType(self, ctx:MiniGoParser.ReceiverTypeContext):
-        return self.visitChildren(ctx)
+        return StructType(ctx.IDENTIFIER, [], []) #???
 
-
-    # Visit a parse tree produced by MiniGoParser#structDecl.
+    # structDecl: TYPE IDENTIFIER STRUCT structBody ;
     def visitStructDecl(self, ctx:MiniGoParser.StructDeclContext):
-        return self.visitChildren(ctx)
+        return StructType(
+            ctx.IDENTIFIER().getText(), 
+            self.visit(ctx.structBody()), 
+            []
+        )
 
-
-    # Visit a parse tree produced by MiniGoParser#structBody.
+    # structBody: L_BRACE fieldDeclList R_BRACE ;
     def visitStructBody(self, ctx:MiniGoParser.StructBodyContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.fieldDeclList())
 
-
-    # Visit a parse tree produced by MiniGoParser#fieldDeclList.
+    # fieldDeclList: nonNullFieldDeclList | ;
     def visitFieldDeclList(self, ctx:MiniGoParser.FieldDeclListContext):
-        return self.visitChildren(ctx)
+        if ctx.nonNullFieldDeclList():
+            return self.visit(ctx.nonNullFieldDeclList())
+        else:
+            return []
 
-
-    # Visit a parse tree produced by MiniGoParser#nonNullFieldDeclList.
+    # nonNullFieldDeclList: fieldDecl | nonNullFieldDeclList fieldDecl ;
     def visitNonNullFieldDeclList(self, ctx:MiniGoParser.NonNullFieldDeclListContext):
-        return self.visitChildren(ctx)
+        if ctx.nonNullFieldDeclList():
+            return self.visit(ctx.nonNullFieldDeclList()) + [self.visit(ctx.fieldDecl())]
+        else:
+            return [self.visit(ctx.fieldDecl())]
 
-
-    # Visit a parse tree produced by MiniGoParser#fieldDecl.
+    # fieldDecl: IDENTIFIER type_ eos ;
     def visitFieldDecl(self, ctx:MiniGoParser.FieldDeclContext):
-        return self.visitChildren(ctx)
+        return (ctx.IDENTIFIER().getText(), self.visit(ctx.type_()))
 
-
-    # Visit a parse tree produced by MiniGoParser#interfaceDecl.
+    # interfaceDecl: TYPE IDENTIFIER INTERFACE interfaceBody;
     def visitInterfaceDecl(self, ctx:MiniGoParser.InterfaceDeclContext):
-        return self.visitChildren(ctx)
+        return InterfaceType(ctx.IDENTIFIER().getText(), self.visit(ctx.interfaceBody()))
 
-
-    # Visit a parse tree produced by MiniGoParser#interfaceBody.
+    # interfaceBody: L_BRACE methodDeclList R_BRACE ;
     def visitInterfaceBody(self, ctx:MiniGoParser.InterfaceBodyContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.methodDeclList())
 
-
-    # Visit a parse tree produced by MiniGoParser#methodDeclList.
+    # methodDeclList: nonNullMethodDeclList | ;
     def visitMethodDeclList(self, ctx:MiniGoParser.MethodDeclListContext):
-        return self.visitChildren(ctx)
+        if ctx.nonNullMethodDeclList():
+            return self.visit(ctx.nonNullMethodDeclList())
+        else:
+            return []
 
-
-    # Visit a parse tree produced by MiniGoParser#nonNullMethodDeclList.
+    # nonNullMethodDeclList: methodDecl | nonNullMethodDeclList methodDecl ;
     def visitNonNullMethodDeclList(self, ctx:MiniGoParser.NonNullMethodDeclListContext):
-        return self.visitChildren(ctx)
+        if ctx.nonNullMethodDeclList():
+            return self.visit(ctx.nonNullMethodDeclList()) + [self.visit(ctx.methodDecl())]
+        else:
+            return [self.visit(ctx.methodDecl())]
 
-
-    # Visit a parse tree produced by MiniGoParser#methodDecl.
+    # methodDecl: IDENTIFIER signature eos;
     def visitMethodDecl(self, ctx:MiniGoParser.MethodDeclContext):
-        return self.visitChildren(ctx)
-
+        params, returnType = self.visit(ctx.signature())
+        return Prototype(ctx.IDENTIFIER().getText(), params, returnType)
 
     # Visit a parse tree produced by MiniGoParser#stmt.
     def visitStmt(self, ctx:MiniGoParser.StmtContext):
         return self.visitChildren(ctx)
-
 
     # Visit a parse tree produced by MiniGoParser#stmtBody.
     def visitStmtBody(self, ctx:MiniGoParser.StmtBodyContext):
