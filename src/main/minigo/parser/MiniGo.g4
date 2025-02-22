@@ -363,7 +363,6 @@ primaryExpr
     : operand                               
     | primaryExpr fieldAccess               
     | primaryExpr arrayAccess               
-    | primaryExpr arguments                 //functionCall
     | primaryExpr DOT IDENTIFIER arguments  //methodCall
     ; 
 
@@ -377,6 +376,11 @@ argumentList: nonNullArgumentList | ;
 
 nonNullArgumentList: expression COMMA nonNullArgumentList | expression ;
 
-operand: literal | IDENTIFIER | L_PAREN expression R_PAREN ; 
+operand
+    : literal 
+    | IDENTIFIER 
+    | IDENTIFIER arguments 
+    | L_PAREN expression R_PAREN 
+    ; 
 
 eos: SEMICOLON | NL;

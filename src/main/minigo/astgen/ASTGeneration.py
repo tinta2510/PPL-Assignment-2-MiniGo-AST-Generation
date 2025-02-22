@@ -6,7 +6,7 @@ class ASTGeneration(MiniGoVisitor):
 
     # program  : declList EOF ;
     def visitProgram(self, ctx:MiniGoParser.ProgramContext):
-        return self.visit(ctx.declList())
+        return Program(self.visit(ctx.declList()))
 
     # declList: decl | declList decl;
     def visitDeclList(self, ctx:MiniGoParser.DeclListContext):
@@ -595,8 +595,7 @@ class ASTGeneration(MiniGoVisitor):
     # primaryExpr
     #     : operand
     #     | primaryExpr fieldAccess 
-    #     | primaryExpr arrayAccess   
-    #     | primaryExpr arguments     
+    #     | primaryExpr arrayAccess      
     #     | primaryExpr DOT IDENTIFIER arguments
     #     ; 
     def visitPrimaryExpr(self, ctx:MiniGoParser.PrimaryExprContext):
@@ -612,11 +611,11 @@ class ASTGeneration(MiniGoVisitor):
                 self.visit(ctx.primaryExpr()), 
                 self.visit(ctx.arrayAccess()) #??? multi-dimensional array call
             )
-        elif ctx.arguments() and not ctx.DOT(): # function call
-            return FuncCall(
-                self.visit(ctx.primaryExpr()), 
-                self.visit(ctx.arguments())
-            )
+        # elif ctx.arguments() and not ctx.DOT(): # function call
+        #     return FuncCall(
+        #         self.visit(ctx.primaryExpr()), 
+        #         self.visit(ctx.arguments())
+        #     )
         elif ctx.arguments() and ctx.DOT(): # method call
             return MethodCall(
                 self.visit(ctx.primaryExpr()), 
@@ -650,11 +649,21 @@ class ASTGeneration(MiniGoVisitor):
             (self.visit(ctx.nonNullArgumentList()) if ctx.nonNullArgumentList() else [])
         )
 
-    # operand: literal | IDENTIFIER | L_PAREN expression R_PAREN ; 
+    # operand
+    #     : literal 
+    #     | IDENTIFIER 
+    #     | IDENTIFIER arguments 
+    #     | L_PAREN expression R_PAREN 
+    #     ; 
     def visitOperand(self, ctx:MiniGoParser.OperandContext):
         if ctx.literal():
             return self.visit(ctx.literal())
-        elif ctx.IDENTIFIER():
+        elif ctx.arguments(): # function call
+            return FuncCall(
+                self.visit(ctx.primaryExpr()), 
+                self.visit(ctx.arguments())
+            )
+        elif ctx.IDENTIFIER() and not ctx.arguments():
             return Id(ctx.IDENTIFIER().getText())
         elif ctx.expression():
             return self.visit(ctx.expression())
