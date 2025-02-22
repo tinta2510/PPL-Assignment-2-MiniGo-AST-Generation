@@ -25,6 +25,16 @@ import unittest
 import inspect
 from AST import *
 
+def log(content, filename="./test/expect.txt"):
+    import inspect
+
+    # Get the function name that called log_to_file
+    caller_function = inspect.stack()[1].function
+
+    # Write to file
+    with open(filename, "a") as file:
+        file.write(f"{caller_function}: \n{content}\n\n")
+
 class ASTGenSuite(unittest.TestCase):
     def test_001(self):
         input = """const VoTien = foo( 1 ); """
@@ -772,6 +782,7 @@ class ASTGenSuite(unittest.TestCase):
 """
         expect = Program([FuncDecl("foo",[],VoidType(),Block([VarDecl("a",ArrayType([IntLiteral(1)],IntType()),IntLiteral(1))]))
 		])
+        log(expect)
         self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
 
     def test_084(self):
@@ -881,6 +892,7 @@ class ASTGenSuite(unittest.TestCase):
 """
         expect = Program([FuncDecl("foo",[],VoidType(),Block([FuncCall("foo",[]),FuncCall("foo",[FuncCall("foo",[]),IntLiteral(2)]),MethCall(Id("a"),"foo",[]),MethCall(FieldAccess(ArrayCell(Id("a"),[IntLiteral(2)]),"c"),"foo",[FuncCall("foo",[]),IntLiteral(2)])]))
 		])
+        log(expect)
         self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
 
     def test_094(self):
@@ -984,6 +996,7 @@ class ASTGenSuite(unittest.TestCase):
 """
         expect = Program([FuncDecl("votien",[],VoidType(),Block([MethCall(ArrayCell(FieldAccess(FieldAccess(Id("a"),"b"),"c"),[IntLiteral(2)]),"d",[])]))
 		])
+        log(expect)
         self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
 
     def test_100(self):
