@@ -257,6 +257,7 @@ class ASTGenSuite(unittest.TestCase):
 			MethodDecl("ID",Id("ID"),FuncDecl("foo",[ParamDecl("a",IntType()),ParamDecl("b",Id("ID"))],VoidType(),Block([VarDecl("a", None,IntLiteral(1))]))),
 			MethodDecl("ID",Id("ID"),FuncDecl("foo",[ParamDecl("a",IntType()),ParamDecl("b",IntType())],VoidType(),Block([VarDecl("a", None,IntLiteral(1))])))
 		])
+        log(expect)
         self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
 
     def test_035(self):
@@ -401,6 +402,7 @@ class ASTGenSuite(unittest.TestCase):
             MethCall(FieldAccess(Id("b"),"a"),"a",[IntLiteral(1),IntLiteral(2)]),
             MethCall(FieldAccess(Id("b"),"a"),"a",[IntLiteral(1)])]))
 		])
+        log(expect)
         self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
     
     def test_042(self):

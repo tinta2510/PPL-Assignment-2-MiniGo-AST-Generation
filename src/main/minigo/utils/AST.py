@@ -91,7 +91,7 @@ class ConstDecl(Decl,BlockMember):
 @dataclass
 class FuncDecl(Decl):
     name: str
-    params: List[VarDecl]
+    params: List[VarDecl] # ParamDecl instead
     retType: Type # VoidType if there is no return type
     body: Block
 

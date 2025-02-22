@@ -120,7 +120,7 @@ class ASTGeneration(MiniGoVisitor):
     def visitNonNullParameterDeclList(self, ctx:MiniGoParser.NonNullParameterDeclListContext):
         identifier_list = self.visit(ctx.identifierList())
         type_ = self.visit(ctx.type_())
-        var_decl_list = [VarDecl(identifier, type_, None) for identifier in identifier_list]
+        var_decl_list = [ParamDecl(identifier, type_) for identifier in identifier_list] #??? ParamDecl
         return (
             var_decl_list + 
             (self.visit(ctx.nonNullParameterDeclList()) if ctx.nonNullParameterDeclList() else [])
@@ -129,8 +129,9 @@ class ASTGeneration(MiniGoVisitor):
     # identifierList: IDENTIFIER | identifierList COMMA IDENTIFIER ;
     def visitIdentifierList(self, ctx:MiniGoParser.IdentifierListContext):
         return (
-            [ctx.IDENTIFIER().getText()] + 
-            (self.visit(ctx.identifierList()) if ctx.identifierList() else [])
+            (self.visit(ctx.identifierList()) if ctx.identifierList() else []) +
+            [ctx.IDENTIFIER().getText()] 
+            
         )
 
     # block: L_BRACE stmtList R_BRACE ; 
@@ -230,7 +231,7 @@ class ASTGeneration(MiniGoVisitor):
     # methodDecl: IDENTIFIER signature eos;
     def visitMethodDecl(self, ctx:MiniGoParser.MethodDeclContext):
         params, returnType = self.visit(ctx.signature()) 
-        params_type_lst = [param.varType for param in params]
+        params_type_lst = [param.parType for param in params]
         return Prototype(ctx.IDENTIFIER().getText(), params_type_lst, returnType)
 
     # stmt: stmtBody eos ;
