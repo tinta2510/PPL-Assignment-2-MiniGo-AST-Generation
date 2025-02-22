@@ -2,6 +2,7 @@ solutions/
 testcases/
 .DS_Store
 .antlr/
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

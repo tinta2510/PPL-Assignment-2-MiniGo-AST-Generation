@@ -42,7 +42,7 @@ class ASTGeneration(MiniGoVisitor):
     # type_: IDENTIFIER | STRING | INT | FLOAT | BOOLEAN | arrayType ;
     def visitType_(self, ctx:MiniGoParser.Type_Context):
         if ctx.IDENTIFIER():
-            return Id(ctx.IDENTIFIER.getText()) #???: Struct name
+            return Id(ctx.IDENTIFIER().getText()) #???: Struct name
         elif ctx.STRING():
             return StringType()
         elif ctx.INT():
@@ -328,15 +328,15 @@ class ASTGeneration(MiniGoVisitor):
         assign_op = self.visit(ctx.assignOp())
         if assign_op == ':=':
             return Assign(
-                self.visit(Id(ctx.IDENTIFIER().getText())), 
+                Id(ctx.IDENTIFIER().getText()), 
                 self.visit(ctx.expression())
             )
         else:
             return Assign(
-                self.visit(Id(ctx.IDENTIFIER().getText())), 
+                Id(ctx.IDENTIFIER().getText()), 
                 BinaryOp(
                     assign_op[0], 
-                    self.visit(Id(ctx.IDENTIFIER().getText())), 
+                    Id(ctx.IDENTIFIER().getText()), 
                     self.visit(ctx.expression())
                 )
             )
@@ -373,7 +373,7 @@ class ASTGeneration(MiniGoVisitor):
     # callStmt: primaryExpr arguments | primaryExpr DOT IDENTIFIER arguments ;
     def visitCallStmt(self, ctx:MiniGoParser.CallStmtContext):
         if ctx.DOT():
-            return MethodCall(
+            return MethCall(
                 self.visit(ctx.primaryExpr()), 
                 ctx.IDENTIFIER().getText(), 
                 self.visit(ctx.arguments())
@@ -432,7 +432,7 @@ class ASTGeneration(MiniGoVisitor):
     def visitArrayLit(self, ctx:MiniGoParser.ArrayLitContext):
         dimensions, elementType = self.visit(ctx.arrayType())
         return ArrayLiteral(
-            dimensions,
+            dimensions, #???: multi-dimensional array
             elementType,
             self.visit(ctx.arrayValue()) #???
         )
@@ -444,9 +444,9 @@ class ASTGeneration(MiniGoVisitor):
     # arrayTypeIndex: integerLit | IDENTIFIER ;
     def visitArrayTypeIndex(self, ctx:MiniGoParser.ArrayTypeIndexContext):
         if ctx.integerLit():
-            return self.visit(ctx.integerLit())
+            return [self.visit(ctx.integerLit())]
         elif ctx.IDENTIFIER():
-            return Id(ctx.IDENTIFIER().getText()) #???: return IntLiteral instead of const
+            return [Id(ctx.IDENTIFIER().getText())] #???: return IntLiteral instead of const
 
     # arrayElementType: type_ ;
     def visitArrayElementType(self, ctx:MiniGoParser.ArrayElementTypeContext):
@@ -617,7 +617,7 @@ class ASTGeneration(MiniGoVisitor):
         #         self.visit(ctx.arguments())
         #     )
         elif ctx.arguments() and ctx.DOT(): # method call
-            return MethodCall(
+            return MethCall(
                 self.visit(ctx.primaryExpr()), 
                 ctx.IDENTIFIER().getText(), 
                 self.visit(ctx.arguments())
@@ -629,7 +629,7 @@ class ASTGeneration(MiniGoVisitor):
 
     # arrayAccess: L_BRACKET expression R_BRACKET ;
     def visitArrayAccess(self, ctx:MiniGoParser.ArrayAccessContext):
-        return self.visit(ctx.expression())
+        return [self.visit(ctx.expression())]
 
     # arguments: L_PAREN argumentList R_PAREN ;
     def visitArguments(self, ctx:MiniGoParser.ArgumentsContext):
@@ -660,7 +660,7 @@ class ASTGeneration(MiniGoVisitor):
             return self.visit(ctx.literal())
         elif ctx.arguments(): # function call
             return FuncCall(
-                self.visit(ctx.primaryExpr()), 
+                ctx.IDENTIFIER().getText(), #???: Id
                 self.visit(ctx.arguments())
             )
         elif ctx.IDENTIFIER() and not ctx.arguments():
