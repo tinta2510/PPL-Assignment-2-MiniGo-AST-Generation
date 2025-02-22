@@ -21,18 +21,7 @@ class ASTGeneration(MiniGoVisitor):
 
     # declBody: varDecl | constDecl | funcDecl | methodDefine | structDecl | interfaceDecl ;
     def visitDeclBody(self, ctx:MiniGoParser.DeclBodyContext):
-        if ctx.varDecl():
-            return self.visit(ctx.varDecl())
-        elif ctx.constDecl():
-            return self.visit(ctx.constDecl())
-        elif ctx.funcDecl():
-            return self.visit(ctx.funcDecl()) 
-        elif ctx.methodDefine():
-            return self.visit(ctx.methodDefine())
-        elif ctx.structDecl():
-            return self.visit(ctx.structDecl())
-        elif ctx.interfaceDecl():
-            return self.visit(ctx.interfaceDecl())
+        return self.visit(ctx.getChild(0))
 
     # varDecl: varDeclWithInit | VAR IDENTIFIER type_ ;
     def visitVarDecl(self, ctx:MiniGoParser.VarDeclContext):
@@ -218,122 +207,186 @@ class ASTGeneration(MiniGoVisitor):
 
     # methodDecl: IDENTIFIER signature eos;
     def visitMethodDecl(self, ctx:MiniGoParser.MethodDeclContext):
-        params, returnType = self.visit(ctx.signature())
-        return Prototype(ctx.IDENTIFIER().getText(), params, returnType)
+        params, returnType = self.visit(ctx.signature()) 
+        params_type_lst = [param.varType for param in params]
+        return Prototype(ctx.IDENTIFIER().getText(), params_type_lst, returnType)
 
-    # Visit a parse tree produced by MiniGoParser#stmt.
+    # stmt: stmtBody eos ;
     def visitStmt(self, ctx:MiniGoParser.StmtContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.stmtBody())
 
-    # Visit a parse tree produced by MiniGoParser#stmtBody.
+    # stmtBody
+    #     : varDecl | constDecl | assignStmt | ifStmt | forStmt | breakStmt 
+    #     | continueStmt | callStmt | returnStmt ;
     def visitStmtBody(self, ctx:MiniGoParser.StmtBodyContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.getChild(0))
 
-
-    # Visit a parse tree produced by MiniGoParser#assignStmt.
+    # assignStmt: lhs assignOp rhs ;
     def visitAssignStmt(self, ctx:MiniGoParser.AssignStmtContext):
-        return self.visitChildren(ctx)
+        assign_op = self.visit(ctx.assignOp())
+        if assign_op == ':=':
+            return Assign(
+                self.visit(ctx.lhs()), 
+                self.visit(ctx.rhs())
+            )
+        else:
+            return Assign(
+                self.visit(ctx.lhs()), 
+                BinaryOp(
+                    assign_op[0], 
+                    self.visit(ctx.lhs()), 
+                    self.visit(ctx.rhs())
+                )
+            )
 
-
-    # Visit a parse tree produced by MiniGoParser#lhs.
+    # lhs: IDENTIFIER | lhs fieldAccess | lhs arrayAccess ; 
     def visitLhs(self, ctx:MiniGoParser.LhsContext):
-        return self.visitChildren(ctx)
+        if ctx.IDENTIFIER():
+            return Id(ctx.IDENTIFIER().getText())
+        elif ctx.fieldAccess():
+            return FieldAccess(
+                self.visit(ctx.lhs()), 
+                self.visit(ctx.fieldAccess())
+            )
+        elif ctx.arrayAccess():
+            return ArrayCell(
+                self.visit(ctx.lhs()), 
+                self.visit(ctx.arrayAccess()) #???: multi-dimensional array call
+            )
 
-
-    # Visit a parse tree produced by MiniGoParser#assignOp.
+    # assignOp: COLON_ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | STAR_ASSIGN | SLASH_ASSIGN | MOD_ASSIGN ;
     def visitAssignOp(self, ctx:MiniGoParser.AssignOpContext):
-        return self.visitChildren(ctx)
+        return ctx.getChild(0).getText()
 
-
-    # Visit a parse tree produced by MiniGoParser#rhs.
+    # rhs: expression ;
     def visitRhs(self, ctx:MiniGoParser.RhsContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.expression())
 
-
-    # Visit a parse tree produced by MiniGoParser#ifStmt.
+    # ifStmt: IF ifCondition block elseStmt ;
     def visitIfStmt(self, ctx:MiniGoParser.IfStmtContext):
-        return self.visitChildren(ctx)
+        return If(
+            self.visit(ctx.ifCondition()),
+            self.visit(ctx.block()),
+            self.visit(ctx.elseStmt()) # Return None if there is no elseStmt
+        )
 
-
-    # Visit a parse tree produced by MiniGoParser#ifCondition.
+    # ifCondition: L_PAREN expression R_PAREN ;
     def visitIfCondition(self, ctx:MiniGoParser.IfConditionContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.expression())
 
-
-    # Visit a parse tree produced by MiniGoParser#elseStmt.
+    # elseStmt: ELSE block | ELSE ifStmt | ;
     def visitElseStmt(self, ctx:MiniGoParser.ElseStmtContext):
-        return self.visitChildren(ctx)
+        if ctx.block():
+            return self.visit(ctx.block())
+        elif ctx.ifStmt():
+            return self.visit(ctx.ifStmt())
+        else:
+            return None
 
-
-    # Visit a parse tree produced by MiniGoParser#forStmt.
+    # forStmt: FOR ( forCondition | forLoop | forRange ) block ;
     def visitForStmt(self, ctx:MiniGoParser.ForStmtContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by MiniGoParser#forClause.
-    def visitForClause(self, ctx:MiniGoParser.ForClauseContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by MiniGoParser#forCondition.
+        if ctx.forCondition():
+            return ForBasic(
+                self.visit(ctx.forCondition()),
+                self.visit(ctx.block())
+            )
+        elif ctx.forLoop():
+            init, condition, update = self.visit(ctx.forLoop())
+            return ForStep(
+                init, 
+                condition, 
+                update, 
+                self.visit(ctx.block())
+            )
+        elif ctx.forRange():
+            idx, value, array = self.visit(ctx.forRange())
+            return ForEach(
+                idx, 
+                value, 
+                array, 
+                self.visit(ctx.block())
+            )
+            
+    # forCondition: expression ;
     def visitForCondition(self, ctx:MiniGoParser.ForConditionContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.expression())
 
-
-    # Visit a parse tree produced by MiniGoParser#forLoop.
+    # forLoop: forLoopInit SEMICOLON forCondition SEMICOLON forLoopUpdate ;
     def visitForLoop(self, ctx:MiniGoParser.ForLoopContext):
-        return self.visitChildren(ctx)
+        return (
+            self.visit(ctx.forLoopInit()), # Stmt
+            self.visit(ctx.forCondition()), # Expr
+            self.visit(ctx.forLoopUpdate()) # Assign
+        )
 
-
-    # Visit a parse tree produced by MiniGoParser#forLoopInit.
+    # forLoopInit: forLoopUpdate | varDeclWithInit ;
     def visitForLoopInit(self, ctx:MiniGoParser.ForLoopInitContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.getChild(0)) #??? varDeclWithInit return VarDecl not Stmt
 
-
-    # Visit a parse tree produced by MiniGoParser#forLoopUpdate.
+    # forLoopUpdate: IDENTIFIER assignOp expression ;
     def visitForLoopUpdate(self, ctx:MiniGoParser.ForLoopUpdateContext):
-        return self.visitChildren(ctx)
+        assign_op = self.visit(ctx.assignOp())
+        if assign_op == ':=':
+            return Assign(
+                self.visit(Id(ctx.IDENTIFIER().getText())), 
+                self.visit(ctx.expression())
+            )
+        else:
+            return Assign(
+                self.visit(Id(ctx.IDENTIFIER().getText())), 
+                BinaryOp(
+                    assign_op[0], 
+                    self.visit(Id(ctx.IDENTIFIER().getText())), 
+                    self.visit(ctx.expression())
+                )
+            )
 
-
-    # Visit a parse tree produced by MiniGoParser#forRange.
+    # forRange: forIndex COMMA forValue COLON_ASSIGN rangeExpr ;
     def visitForRange(self, ctx:MiniGoParser.ForRangeContext):
-        return self.visitChildren(ctx)
+        return (
+            self.visit(ctx.forIndex()), # Id
+            self.visit(ctx.forValue()), # Id
+            self.visit(ctx.rangeExpr()) # Expr
+        )
 
 
-    # Visit a parse tree produced by MiniGoParser#forIndex.
+    # forIndex: IDENTIFIER ;
     def visitForIndex(self, ctx:MiniGoParser.ForIndexContext):
-        return self.visitChildren(ctx)
+        return Id(ctx.IDENTIFIER().getText())
 
-
-    # Visit a parse tree produced by MiniGoParser#forValue.
+    # forValue: IDENTIFIER ;
     def visitForValue(self, ctx:MiniGoParser.ForValueContext):
-        return self.visitChildren(ctx)
+        return Id(ctx.IDENTIFIER().getText())
 
-
-    # Visit a parse tree produced by MiniGoParser#rangeExpr.
+    # rangeExpr: RANGE expression ; 
     def visitRangeExpr(self, ctx:MiniGoParser.RangeExprContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.expression())
 
-
-    # Visit a parse tree produced by MiniGoParser#breakStmt.
+    # breakStmt: BREAK ;
     def visitBreakStmt(self, ctx:MiniGoParser.BreakStmtContext):
-        return self.visitChildren(ctx)
+        return Break()
 
-
-    # Visit a parse tree produced by MiniGoParser#continueStmt.
+    # continueStmt: CONTINUE ;
     def visitContinueStmt(self, ctx:MiniGoParser.ContinueStmtContext):
-        return self.visitChildren(ctx)
+        return Continue()
 
-
-    # Visit a parse tree produced by MiniGoParser#callStmt.
+    # callStmt: primaryExpr arguments | primaryExpr DOT IDENTIFIER arguments ;
     def visitCallStmt(self, ctx:MiniGoParser.CallStmtContext):
-        return self.visitChildren(ctx)
+        if ctx.DOT():
+            return MethodCall(
+                self.visit(ctx.primaryExpr()), 
+                ctx.IDENTIFIER().getText(), 
+                self.visit(ctx.arguments())
+            )
+        else:
+            return FuncCall(
+                self.visit(ctx.primaryExpr()), 
+                self.visit(ctx.arguments())
+            )
 
-
-    # Visit a parse tree produced by MiniGoParser#returnStmt.
+    # returnStmt: RETURN expression | RETURN ;
     def visitReturnStmt(self, ctx:MiniGoParser.ReturnStmtContext):
-        return self.visitChildren(ctx)
-
+        return Return(self.visit(ctx.expression()) if ctx.expression() else None)
 
     # literal: basicLit | compositeLit ;
     def visitLiteral(self, ctx:MiniGoParser.LiteralContext):
@@ -356,7 +409,6 @@ class ASTGeneration(MiniGoVisitor):
             return BooleanLiteral(False)
         elif ctx.NIL():
             return NilLiteral()
-
 
     # integerLit: DECIMAL_INT | BINARY_INT | OCTAL_INT | HEX_INT ;
     def visitIntegerLit(self, ctx:MiniGoParser.IntegerLitContext):
@@ -545,6 +597,7 @@ class ASTGeneration(MiniGoVisitor):
     #     | primaryExpr fieldAccess 
     #     | primaryExpr arrayAccess   
     #     | primaryExpr arguments     
+    #     | primaryExpr DOT IDENTIFIER arguments
     #     ; 
     def visitPrimaryExpr(self, ctx:MiniGoParser.PrimaryExprContext):
         if ctx.operand():
@@ -559,12 +612,17 @@ class ASTGeneration(MiniGoVisitor):
                 self.visit(ctx.primaryExpr()), 
                 self.visit(ctx.arrayAccess()) #??? multi-dimensional array call
             )
-        elif ctx.arguments():
+        elif ctx.arguments() and not ctx.DOT(): # function call
             return FuncCall(
                 self.visit(ctx.primaryExpr()), 
                 self.visit(ctx.arguments())
             )
-            # ??? MethCall
+        elif ctx.arguments() and ctx.DOT(): # method call
+            return MethodCall(
+                self.visit(ctx.primaryExpr()), 
+                ctx.IDENTIFIER().getText(), 
+                self.visit(ctx.arguments())
+            )
 
     # fieldAccess: DOT IDENTIFIER ;
     def visitFieldAccess(self, ctx:MiniGoParser.FieldAccessContext):

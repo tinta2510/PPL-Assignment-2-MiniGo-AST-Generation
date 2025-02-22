@@ -279,9 +279,7 @@ ifCondition: L_PAREN expression R_PAREN ;
 
 elseStmt: ELSE block | ELSE ifStmt | ;
 
-forStmt: FOR forClause block ;
-
-forClause: forCondition | forLoop | forRange ;
+forStmt: FOR ( forCondition | forLoop | forRange ) block ;
 
 forCondition: expression ;
 
@@ -303,7 +301,7 @@ breakStmt: BREAK ;
 
 continueStmt: CONTINUE ;
 
-callStmt: primaryExpr arguments ;
+callStmt: primaryExpr arguments | primaryExpr DOT IDENTIFIER arguments ;
 
 returnStmt: RETURN expression | RETURN ;
 
@@ -362,11 +360,11 @@ mulExpr: mulExpr mulOp = (STAR | SLASH | MOD) unaryExpr | unaryExpr ;
 unaryExpr: unaryOp = (PLUS | MINUS | NOT) unaryExpr | primaryExpr ;
 
 primaryExpr
-    : operand                               #operandExpr
-    | primaryExpr fieldAccess               #fieldAccessExpr
-    | primaryExpr arrayAccess               #arrayAccessExpr
-    | primaryExpr arguments                 #functionCall
-    | primaryExpr DOT IDENTIFIER arguments  #methodCall
+    : operand                               
+    | primaryExpr fieldAccess               
+    | primaryExpr arrayAccess               
+    | primaryExpr arguments                 //functionCall
+    | primaryExpr DOT IDENTIFIER arguments  //methodCall
     ; 
 
 fieldAccess: DOT IDENTIFIER ;
