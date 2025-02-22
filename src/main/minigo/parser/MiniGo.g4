@@ -204,7 +204,9 @@ varDeclWithInit
     | VAR IDENTIFIER initilization
     ;
 
-type_: IDENTIFIER | STRING | INT | FLOAT | BOOLEAN | arrayType ;
+type_: basicTypeAndStruct | arrayType ;
+
+basicTypeAndStruct: IDENTIFIER | STRING | INT | FLOAT | BOOLEAN ;
 
 initilization: ASSIGN expression ;
 
@@ -316,11 +318,13 @@ compositeLit: arrayLit | structLit ;
 
 arrayLit: arrayType arrayValue ;
 
-arrayType: L_BRACKET arrayTypeIndex R_BRACKET arrayElementType ; 
+arrayType
+    : L_BRACKET arrayTypeIndex R_BRACKET arrayType 
+    | L_BRACKET arrayTypeIndex R_BRACKET basicTypeAndStruct; 
 
 arrayTypeIndex: integerLit | IDENTIFIER ;
 
-arrayElementType: type_ ;
+arrayElementType: basicTypeAndStruct ;
 
 arrayValue: L_BRACE arrayList R_BRACE;
 

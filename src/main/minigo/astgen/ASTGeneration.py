@@ -39,8 +39,15 @@ class ASTGeneration(MiniGoVisitor):
             return VarDecl(ctx.IDENTIFIER().getText(), None, 
                            self.visit(ctx.initilization()))
 
-    # type_: IDENTIFIER | STRING | INT | FLOAT | BOOLEAN | arrayType ;
+    # type_: basicTypeAndStruct | arrayType ;
     def visitType_(self, ctx:MiniGoParser.Type_Context):
+        if ctx.basicTypeAndStruct():
+            return self.visit(ctx.basicTypeAndStruct())
+        elif ctx.arrayType():
+            return self.visit(ctx.arrayType())
+        
+    # basicTypeAndStruct: IDENTIFIER | STRING | INT | FLOAT | BOOLEAN ;
+    def visitBasicTypeAndStruct(self, ctx:MiniGoParser.BasicTypeAndStructContext):
         if ctx.IDENTIFIER():
             return Id(ctx.IDENTIFIER().getText()) #???: Struct name
         elif ctx.STRING():
@@ -51,8 +58,6 @@ class ASTGeneration(MiniGoVisitor):
             return FloatType()
         elif ctx.BOOLEAN():
             return BoolType()
-        elif ctx.arrayType():
-            return self.visit(ctx.arrayType())
         
     # initilization: ASSIGN expression ;
     def visitInitilization(self, ctx:MiniGoParser.InitilizationContext):
@@ -402,7 +407,7 @@ class ASTGeneration(MiniGoVisitor):
         elif ctx.FLOAT_LIT():
             return FloatLiteral(float(ctx.FLOAT_LIT().getText()))
         elif ctx.STRING_LIT():
-            return StringLiteral(ctx.STRING_LIT().getText())
+            return StringLiteral(ctx.STRING_LIT().getText()[1:-1]) #!!! Remove open and closed quotes
         elif ctx.TRUE():
             return BooleanLiteral(True)
         elif ctx.FALSE():
@@ -437,20 +442,26 @@ class ASTGeneration(MiniGoVisitor):
             self.visit(ctx.arrayValue()) #???
         )
 
-    # arrayType: L_BRACKET arrayTypeIndex R_BRACKET arrayElementType ; 
+    # arrayType
+    #     : L_BRACKET arrayTypeIndex R_BRACKET arrayType 
+    #     | L_BRACKET arrayTypeIndex R_BRACKET basicTypeAndStruct; 
     def visitArrayType(self, ctx:MiniGoParser.ArrayTypeContext):
-        return self.visit(ctx.arrayTypeIndex()), self.visit(ctx.arrayElementType())
+        if ctx.arrayType():
+            dimensions, elementType = self.visit(ctx.arrayType())
+            return [self.visit(ctx.arrayTypeIndex())] + dimensions, elementType
+        else:
+            return [self.visit(ctx.arrayTypeIndex())], self.visit(ctx.basicTypeAndStruct())
     
     # arrayTypeIndex: integerLit | IDENTIFIER ;
     def visitArrayTypeIndex(self, ctx:MiniGoParser.ArrayTypeIndexContext):
         if ctx.integerLit():
-            return [self.visit(ctx.integerLit())]
+            return self.visit(ctx.integerLit())
         elif ctx.IDENTIFIER():
-            return [Id(ctx.IDENTIFIER().getText())] #???: return IntLiteral instead of const
+            return Id(ctx.IDENTIFIER().getText()) #???: return IntLiteral instead of const
 
-    # arrayElementType: type_ ;
+    # arrayElementType: basicTypeAndStruct ;
     def visitArrayElementType(self, ctx:MiniGoParser.ArrayElementTypeContext):
-        return self.visit(ctx.type_())
+        return self.visit(ctx.basicTypeAndStruct())
 
     # arrayValue: L_BRACE arrayList R_BRACE;
     def visitArrayValue(self, ctx:MiniGoParser.ArrayValueContext):
