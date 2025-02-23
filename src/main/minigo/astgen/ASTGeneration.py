@@ -44,7 +44,8 @@ class ASTGeneration(MiniGoVisitor):
         if ctx.basicTypeAndStruct():
             return self.visit(ctx.basicTypeAndStruct())
         elif ctx.arrayType():
-            return self.visit(ctx.arrayType())
+            dimensions, elementType = self.visit(ctx.arrayType())
+            return ArrayType(dimensions, elementType)
         
     # basicTypeAndStruct: IDENTIFIER | STRING | INT | FLOAT | BOOLEAN ;
     def visitBasicTypeAndStruct(self, ctx:MiniGoParser.BasicTypeAndStructContext):
@@ -438,7 +439,7 @@ class ASTGeneration(MiniGoVisitor):
     def visitArrayLit(self, ctx:MiniGoParser.ArrayLitContext):
         dimensions, elementType = self.visit(ctx.arrayType())
         return ArrayLiteral(
-            dimensions, #???: multi-dimensional array
+            dimensions,
             elementType,
             self.visit(ctx.arrayValue()) #???
         )
@@ -447,6 +448,7 @@ class ASTGeneration(MiniGoVisitor):
     #     : L_BRACKET arrayTypeIndex R_BRACKET arrayType 
     #     | L_BRACKET arrayTypeIndex R_BRACKET basicTypeAndStruct; 
     def visitArrayType(self, ctx:MiniGoParser.ArrayTypeContext):
+        '''Result: (dimensions, elementType)'''
         if ctx.arrayType():
             dimensions, elementType = self.visit(ctx.arrayType())
             return [self.visit(ctx.arrayTypeIndex())] + dimensions, elementType
@@ -619,9 +621,14 @@ class ASTGeneration(MiniGoVisitor):
                 self.visit(ctx.fieldAccess())
             )
         elif ctx.arrayAccess():
+            accessed_arr = self.visit(ctx.primaryExpr())
+            if type(accessed_arr) == ArrayCell:
+                arr, prev_idx = accessed_arr.arr, accessed_arr.idx
+            else:
+                arr, prev_idx = accessed_arr, []
             return ArrayCell(
-                self.visit(ctx.primaryExpr()), 
-                self.visit(ctx.arrayAccess()) #??? multi-dimensional array call
+                arr, 
+                prev_idx + self.visit(ctx.arrayAccess())
             )
         # elif ctx.arguments() and not ctx.DOT(): # function call
         #     return FuncCall(
