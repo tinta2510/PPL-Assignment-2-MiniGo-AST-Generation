@@ -4,20 +4,20 @@ from TestUtils import TestParser
 class ParserSuite(unittest.TestCase):
     def test_201(self):
         """Literal int"""
-        input = "const ABC = 1;"
+        input = "const ABC = [1][a]int{1, 2};"
         expect = "successful"
         self.assertTrue(TestParser.checkParser(input, expect, 201))
 
     def test_202(self):
         """Literal boolean true"""
-        input = "var ABC = true;"
-        expect = "successful"
+        input = "var ABC = [1+1]int{2};"
+        expect = "Error on line 1 col 13: +"
         self.assertTrue(TestParser.checkParser(input, expect, 202))
     
     def test_203(self):
         """Literal boolean false"""
-        input = "var ABC bool;"
-        expect = "successful"
+        input = "var ABC [1-1][a]int;"
+        expect = "Error on line 1 col 11: -"
         self.assertTrue(TestParser.checkParser(input, expect, 203))
         
     def test_204(self):

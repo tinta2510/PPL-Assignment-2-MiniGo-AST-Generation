@@ -208,10 +208,6 @@ type_: basicTypeAndStruct | arrayType ;
 
 basicTypeAndStruct: IDENTIFIER | STRING | INT | FLOAT | BOOLEAN ;
 
-arrayType
-    : L_BRACKET expression R_BRACKET arrayType 
-    | L_BRACKET expression R_BRACKET basicTypeAndStruct; 
-
 initilization: ASSIGN expression ;
 
 constDecl: CONST IDENTIFIER initilization ;
@@ -320,13 +316,13 @@ integerLit: DECIMAL_INT | BINARY_INT | OCTAL_INT | HEX_INT ;
 
 compositeLit: arrayLit | structLit ;
 
-arrayLit: arrayLitType arrayValue ;
+arrayLit: arrayType arrayValue ;
 
-arrayLitType
-    : L_BRACKET arrayLitIndex R_BRACKET arrayLitType 
-    | L_BRACKET arrayLitIndex R_BRACKET basicTypeAndStruct; 
+arrayType
+    : L_BRACKET arrayTypeIndex R_BRACKET arrayType 
+    | L_BRACKET arrayTypeIndex R_BRACKET basicTypeAndStruct; 
 
-arrayLitIndex: integerLit | IDENTIFIER ;
+arrayTypeIndex: integerLit | IDENTIFIER ;
 
 arrayElementType: basicTypeAndStruct ;
 

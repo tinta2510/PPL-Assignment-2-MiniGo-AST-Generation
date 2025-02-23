@@ -58,23 +58,6 @@ class ASTGeneration(MiniGoVisitor):
             return FloatType()
         elif ctx.BOOLEAN():
             return BoolType()
-        
-    # arrayType
-    #     : L_BRACKET expression R_BRACKET arrayType 
-    #     | L_BRACKET expression R_BRACKET basicTypeAndStruct; 
-    def visitArrayType(self, ctx:MiniGoParser.ArrayTypeContext):
-        if ctx.arrayType():
-            array_type = self.visit(ctx.arrayType())
-            dimensions, elementType = array_type.dimens, array_type.eleType
-            return ArrayType(
-                [self.visit(ctx.expression())] + dimensions,
-                elementType
-            )
-        else:
-            return ArrayType(
-                [self.visit(ctx.expression())],
-                self.visit(ctx.basicTypeAndStruct())
-            )
 
     # initilization: ASSIGN expression ;
     def visitInitilization(self, ctx:MiniGoParser.InitilizationContext):
@@ -451,27 +434,27 @@ class ASTGeneration(MiniGoVisitor):
         elif ctx.structLit():
             return self.visit(ctx.structLit())
 
-    # arrayLit: arrayLitType arrayValue ;
+    # arrayLit: arrayType arrayValue ;
     def visitArrayLit(self, ctx:MiniGoParser.ArrayLitContext):
-        dimensions, elementType = self.visit(ctx.arrayLitType())
+        dimensions, elementType = self.visit(ctx.arrayType())
         return ArrayLiteral(
             dimensions, #???: multi-dimensional array
             elementType,
             self.visit(ctx.arrayValue()) #???
         )
         
-    # arrayLitType
-    #     : L_BRACKET arrayLitIndex R_BRACKET arrayLitType 
-    #     | L_BRACKET arrayLitIndex R_BRACKET basicTypeAndStruct;
-    def visitArrayLitType(self, ctx:MiniGoParser.ArrayLitTypeContext):
-        if ctx.arrayLitType():
-            dimensions, elementType = self.visit(ctx.arrayLitType())
-            return [self.visit(ctx.arrayLitIndex())] + dimensions, elementType
+    # arrayType
+    #     : L_BRACKET arrayTypeIndex R_BRACKET arrayType 
+    #     | L_BRACKET arrayTypeIndex R_BRACKET basicTypeAndStruct; 
+    def visitArrayType(self, ctx:MiniGoParser.ArrayTypeContext):
+        if ctx.arrayType():
+            dimensions, elementType = self.visit(ctx.arrayType())
+            return [self.visit(ctx.arrayTypeIndex())] + dimensions, elementType
         else:
-            return [self.visit(ctx.arrayLitIndex())], self.visit(ctx.basicTypeAndStruct())
-
-    # arrayLitIndex: integerLit | IDENTIFIER ;
-    def visitArrayLitIndex(self, ctx:MiniGoParser.ArrayLitIndexContext):
+            return [self.visit(ctx.arrayTypeIndex())], self.visit(ctx.basicTypeAndStruct())
+    
+    # arrayTypeIndex: integerLit | IDENTIFIER ;
+    def visitArrayTypeIndex(self, ctx:MiniGoParser.ArrayTypeIndexContext):
         if ctx.integerLit():
             return self.visit(ctx.integerLit())
         elif ctx.IDENTIFIER():
