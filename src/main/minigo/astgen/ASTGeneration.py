@@ -256,9 +256,14 @@ class ASTGeneration(MiniGoVisitor):
                 self.visit(ctx.fieldAccess())
             )
         elif ctx.arrayAccess():
+            accessed_arr = self.visit(ctx.lhs())
+            if type(accessed_arr) == ArrayCell:
+                arr, prev_idx = accessed_arr.arr, accessed_arr.idx
+            else:
+                arr, prev_idx = accessed_arr, []
             return ArrayCell(
-                self.visit(ctx.lhs()), 
-                self.visit(ctx.arrayAccess()) #???: multi-dimensional array call
+                arr, 
+                prev_idx + self.visit(ctx.arrayAccess())
             )
 
     # assignOp: COLON_ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | STAR_ASSIGN | SLASH_ASSIGN | MOD_ASSIGN ;
@@ -377,7 +382,7 @@ class ASTGeneration(MiniGoVisitor):
     def visitContinueStmt(self, ctx:MiniGoParser.ContinueStmtContext):
         return Continue()
 
-    # callStmt: primaryExpr arguments | primaryExpr DOT IDENTIFIER arguments ;
+    # callStmt: IDENTIFIER arguments | primaryExpr DOT IDENTIFIER arguments ;
     def visitCallStmt(self, ctx:MiniGoParser.CallStmtContext):
         if ctx.DOT():
             return MethCall(
@@ -387,7 +392,7 @@ class ASTGeneration(MiniGoVisitor):
             )
         else:
             return FuncCall(
-                self.visit(ctx.primaryExpr()), 
+                ctx.IDENTIFIER().getText(), 
                 self.visit(ctx.arguments())
             )
 
@@ -679,7 +684,7 @@ class ASTGeneration(MiniGoVisitor):
             return self.visit(ctx.literal())
         elif ctx.arguments(): # function call
             return FuncCall(
-                ctx.IDENTIFIER().getText(), #???: Id
+                ctx.IDENTIFIER().getText(), 
                 self.visit(ctx.arguments())
             )
         elif ctx.IDENTIFIER() and not ctx.arguments():

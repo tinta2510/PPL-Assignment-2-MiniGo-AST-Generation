@@ -303,7 +303,7 @@ breakStmt: BREAK ;
 
 continueStmt: CONTINUE ;
 
-callStmt: primaryExpr arguments | primaryExpr DOT IDENTIFIER arguments ;
+callStmt: IDENTIFIER arguments | primaryExpr DOT IDENTIFIER arguments ; //???lhs
 
 returnStmt: RETURN expression | RETURN ;
 
