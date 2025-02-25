@@ -50,7 +50,7 @@ class ASTGeneration(MiniGoVisitor):
     # basicTypeAndStruct: IDENTIFIER | STRING | INT | FLOAT | BOOLEAN ;
     def visitBasicTypeAndStruct(self, ctx:MiniGoParser.BasicTypeAndStructContext):
         if ctx.IDENTIFIER():
-            return Id(ctx.IDENTIFIER().getText()) #???: Struct name
+            return Id(ctx.IDENTIFIER().getText()) 
         elif ctx.STRING():
             return StringType()
         elif ctx.INT():
@@ -104,7 +104,7 @@ class ASTGeneration(MiniGoVisitor):
     def visitNonNullParameterDeclList(self, ctx:MiniGoParser.NonNullParameterDeclListContext):
         identifier_list = self.visit(ctx.identifierList())
         type_ = self.visit(ctx.type_())
-        var_decl_list = [ParamDecl(identifier, type_) for identifier in identifier_list] #??? ParamDecl
+        var_decl_list = [ParamDecl(identifier, type_) for identifier in identifier_list]
         return (
             var_decl_list + 
             (self.visit(ctx.nonNullParameterDeclList()) if ctx.nonNullParameterDeclList() else [])
@@ -120,7 +120,7 @@ class ASTGeneration(MiniGoVisitor):
 
     # block: L_BRACE stmtList R_BRACE ; 
     def visitBlock(self, ctx:MiniGoParser.BlockContext):
-        return Block(self.visit(ctx.stmtList())) #???
+        return Block(self.visit(ctx.stmtList())) 
     
     # stmtList: nonNullStmtList | ;
     def visitStmtList(self, ctx:MiniGoParser.StmtListContext):
@@ -158,7 +158,7 @@ class ASTGeneration(MiniGoVisitor):
 
     # receiverType: IDENTIFIER ;
     def visitReceiverType(self, ctx:MiniGoParser.ReceiverTypeContext):
-        return Id(ctx.IDENTIFIER().getText()) #???: Struct name
+        return Id(ctx.IDENTIFIER().getText())
 
     # structDecl: TYPE IDENTIFIER STRUCT structBody ;
     def visitStructDecl(self, ctx:MiniGoParser.StructDeclContext):
@@ -333,7 +333,7 @@ class ASTGeneration(MiniGoVisitor):
 
     # forLoopInit: forLoopUpdate | varDeclWithInit ;
     def visitForLoopInit(self, ctx:MiniGoParser.ForLoopInitContext):
-        return self.visit(ctx.getChild(0)) #??? varDeclWithInit return VarDecl not Stmt
+        return self.visit(ctx.getChild(0)) 
 
     # forLoopUpdate: IDENTIFIER assignOp expression ;
     def visitForLoopUpdate(self, ctx:MiniGoParser.ForLoopUpdateContext):
@@ -446,7 +446,7 @@ class ASTGeneration(MiniGoVisitor):
         return ArrayLiteral(
             dimensions,
             elementType,
-            self.visit(ctx.arrayValue()) #???
+            self.visit(ctx.arrayValue()) 
         )
         
     # arrayType
@@ -465,7 +465,7 @@ class ASTGeneration(MiniGoVisitor):
         if ctx.integerLit():
             return self.visit(ctx.integerLit())
         elif ctx.IDENTIFIER():
-            return Id(ctx.IDENTIFIER().getText()) #??? IntLiteral only or constant
+            return Id(ctx.IDENTIFIER().getText()) 
 
     # arrayElementType: basicTypeAndStruct ;
     def visitArrayElementType(self, ctx:MiniGoParser.ArrayElementTypeContext):
@@ -489,14 +489,14 @@ class ASTGeneration(MiniGoVisitor):
             (self.visit(ctx.nonNullArrayList()) if ctx.nonNullArrayList() else [])
         )
 
-    # arrayElement: IDENTIFIER | basicLit | structLit | arrayValue ; #???
+    # arrayElement: IDENTIFIER | basicLit | structLit | arrayValue ; 
     def visitArrayElement(self, ctx:MiniGoParser.ArrayElementContext):
         if ctx.IDENTIFIER():
-            return Id(ctx.IDENTIFIER().getText()) #???: return IntLiteral instead of const
+            return Id(ctx.IDENTIFIER().getText()) 
         elif ctx.basicLit():
             return self.visit(ctx.basicLit())
         elif ctx.structLit():
-            return self.visit(ctx.structLit()) #???: not include structLit in PrimitiveType
+            return self.visit(ctx.structLit()) 
         elif ctx.arrayValue():
             return self.visit(ctx.arrayValue())
 

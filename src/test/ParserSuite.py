@@ -4,8 +4,8 @@ from TestUtils import TestParser
 class ParserSuite(unittest.TestCase):
     def test_201(self):
         """Literal int"""
-        input = "const ABC = [1][a]int{1, 2};"
-        expect = "successful"
+        input = "const max int = 0xA; var min float = 0.5;"
+        expect = "Error on line 1 col 11: int"
         self.assertTrue(TestParser.checkParser(input, expect, 201))
 
     def test_202(self):
@@ -22,7 +22,7 @@ class ParserSuite(unittest.TestCase):
         
     def test_204(self):
         """Literal nil"""
-        input = "const ABC = foo(1+1);"
+        input = "var flag bool = a || b && c;"
         expect = "successful"
         self.assertTrue(TestParser.checkParser(input, expect, 204))
         
