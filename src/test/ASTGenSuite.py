@@ -41,7 +41,7 @@ class ASTGenSuite(unittest.TestCase):
             } 
 """
         expect = Program([FuncDecl("main",[],VoidType(),Block([
-            Assign(ArrayCell(Id("a"),[StringLiteral("s"),FuncCall("foo",[])]),ArrayCell(Id("a"),[IntLiteral(2),IntLiteral(2),IntLiteral(3)])),
+            Assign(ArrayCell(Id("a"),[StringLiteral("\"s\""),FuncCall("foo",[])]),ArrayCell(Id("a"),[IntLiteral(2),IntLiteral(2),IntLiteral(3)])),
             Assign(ArrayCell(Id("a"),[IntLiteral(2)]),ArrayCell(Id("a"),[IntLiteral(3),IntLiteral(4)])),
             Assign(ArrayCell(FieldAccess(FieldAccess(Id("b"),"c"),"a"),[IntLiteral(2)]),ArrayCell(FieldAccess(FieldAccess(Id("b"),"c"),"a"),[IntLiteral(2)]))]))
 		])
@@ -93,7 +93,7 @@ class ASTGenSuite(unittest.TestCase):
 
     def test_309(self):
         input = """const text = "hello";"""
-        expect = Program([ConstDecl("text", None, StringLiteral("hello"))])
+        expect = Program([ConstDecl("text", None, StringLiteral("\"hello\""))])
         self.assertTrue(TestAST.checkASTGen(input, str(expect), 309))
 
     def test_310(self):
@@ -103,7 +103,7 @@ class ASTGenSuite(unittest.TestCase):
 
     def test_311(self):
         input = """var p Person = Person{name: "tin", age: 18};"""
-        expect = Program([VarDecl("p", Id("Person"), StructLiteral("Person",[("name",StringLiteral("tin")), ("age",IntLiteral(18))])) ])
+        expect = Program([VarDecl("p", Id("Person"), StructLiteral("Person",[("name",StringLiteral("\"tin\"")), ("age",IntLiteral(18))])) ])
         log(expect)
         self.assertTrue(TestAST.checkASTGen(input, str(expect), 311))
 
@@ -565,7 +565,7 @@ class ASTGenSuite(unittest.TestCase):
             StructType("Dog", [], []),
             MethodDecl("d", Id("Dog"),
                 FuncDecl("makeSound", [], StringType(),
-                    Block([Return(StringLiteral("Woof"))])
+                    Block([Return(StringLiteral("\"Woof\""))])
                 )
             )
         ])
@@ -662,7 +662,7 @@ class ASTGenSuite(unittest.TestCase):
         expect = Program([
             FuncDecl("createPerson", [], Id("Person"), Block([
                 Return(StructLiteral("Person", [
-                    ("name", StringLiteral("John")),
+                    ("name", StringLiteral("\"John\"")),
                     ("age", IntLiteral(25))
                 ]))
             ]))
@@ -913,7 +913,7 @@ class ASTGenSuite(unittest.TestCase):
                             BinaryOp("+", 
                                     BinaryOp("+", 
                                               FieldAccess(Id("c"), "model"),
-                                              StringLiteral(" ")
+                                              StringLiteral("\" \"")
                                               ),
                                     FieldAccess(Id("c"), "year")
                                     )
@@ -1187,7 +1187,7 @@ class ASTGenSuite(unittest.TestCase):
         [], 
         VoidType(), 
         Block([
-            FuncCall("print", [StringLiteral("Hello, world!")])
+            FuncCall("print", [StringLiteral("\"Hello, world!\"")])
         ])
     )
 ])

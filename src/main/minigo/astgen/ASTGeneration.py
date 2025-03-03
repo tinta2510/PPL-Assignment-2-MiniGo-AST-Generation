@@ -32,12 +32,10 @@ class ASTGeneration(MiniGoVisitor):
 
     # varDeclWithInit: VAR IDENTIFIER type_ initilization | VAR IDENTIFIER initilization;
     def visitVarDeclWithInit(self, ctx:MiniGoParser.VarDeclWithInitContext):
-        if ctx.type_():
-            return VarDecl(ctx.IDENTIFIER().getText(), self.visit(ctx.type_()), 
-                           self.visit(ctx.initilization()))
-        else:
-            return VarDecl(ctx.IDENTIFIER().getText(), None, 
-                           self.visit(ctx.initilization()))
+        return VarDecl(ctx.IDENTIFIER().getText(), 
+                        self.visit(ctx.type_()) if ctx.type_() else None, 
+                        self.visit(ctx.initilization())
+                        )
 
     # type_: basicTypeAndStruct | arrayType ;
     def visitType_(self, ctx:MiniGoParser.Type_Context):
@@ -80,10 +78,7 @@ class ASTGeneration(MiniGoVisitor):
 
     # signature: parameterList returnType | parameterList ;
     def visitSignature(self, ctx:MiniGoParser.SignatureContext):
-        if ctx.returnType():
-            return self.visit(ctx.parameterList()), self.visit(ctx.returnType())
-        else:
-            return self.visit(ctx.parameterList()), VoidType()
+        return self.visit(ctx.parameterList()), self.visit(ctx.returnType()) if ctx.returnType() else VoidType()
 
     # parameterList: L_PAREN parameterDeclList R_PAREN ;
     def visitParameterList(self, ctx:MiniGoParser.ParameterListContext):
@@ -115,7 +110,6 @@ class ASTGeneration(MiniGoVisitor):
         return (
             (self.visit(ctx.identifierList()) if ctx.identifierList() else []) +
             [ctx.IDENTIFIER().getText()] 
-            
         )
 
     # block: L_BRACE stmtList R_BRACE ; 
@@ -361,7 +355,6 @@ class ASTGeneration(MiniGoVisitor):
             self.visit(ctx.rangeExpr()) # Expr
         )
 
-
     # forIndex: IDENTIFIER ;
     def visitForIndex(self, ctx:MiniGoParser.ForIndexContext):
         return Id(ctx.IDENTIFIER().getText())
@@ -426,14 +419,16 @@ class ASTGeneration(MiniGoVisitor):
 
     # integerLit: DECIMAL_INT | BINARY_INT | OCTAL_INT | HEX_INT ;
     def visitIntegerLit(self, ctx:MiniGoParser.IntegerLitContext):
+        base = None
         if ctx.DECIMAL_INT():
-            return IntLiteral(int(ctx.DECIMAL_INT().getText()))
+            base = 10
         elif ctx.BINARY_INT():
-            return IntLiteral(int(ctx.BINARY_INT().getText(), 2))
+            base = 2
         elif ctx.OCTAL_INT():
-            return IntLiteral(int(ctx.OCTAL_INT().getText(), 8))
-        elif ctx.HEX_INT(): 
-            return IntLiteral(int(ctx.HEX_INT().getText(), 16))
+            base = 8
+        elif ctx.HEX_INT():
+            base = 16
+        return IntLiteral(int(ctx.getChild(0).getText(), base))
         
     # arrayLit: arrayType arrayValue ;
     def visitArrayLit(self, ctx:MiniGoParser.ArrayLitContext):
@@ -630,11 +625,6 @@ class ASTGeneration(MiniGoVisitor):
                 arr, 
                 prev_idx + self.visit(ctx.arrayAccess())
             )
-        # elif ctx.arguments() and not ctx.DOT(): # function call
-        #     return FuncCall(
-        #         self.visit(ctx.primaryExpr()), 
-        #         self.visit(ctx.arguments())
-        #     )
         elif ctx.arguments() and ctx.DOT(): # method call
             return MethCall(
                 self.visit(ctx.primaryExpr()), 
