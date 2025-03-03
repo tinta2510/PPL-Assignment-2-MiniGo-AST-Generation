@@ -400,12 +400,14 @@ class ASTGeneration(MiniGoVisitor):
     def visitReturnStmt(self, ctx:MiniGoParser.ReturnStmtContext):
         return Return(self.visit(ctx.expression()) if ctx.expression() else None)
 
-    # literal: basicLit | compositeLit ;
+    # literal: basicLit | arrayLit | structLit  ;
     def visitLiteral(self, ctx:MiniGoParser.LiteralContext):
         if ctx.basicLit():
             return self.visit(ctx.basicLit())
-        elif ctx.compositeLit():
-            return self.visit(ctx.compositeLit())
+        elif ctx.arrayLit():
+            return self.visit(ctx.arrayLit())
+        elif ctx.structLit():
+            return self.visit(ctx.structLit())
 
     # basicLit: integerLit | FLOAT_LIT | STRING_LIT | TRUE | FALSE | NIL ;
     def visitBasicLit(self, ctx:MiniGoParser.BasicLitContext):
@@ -414,7 +416,7 @@ class ASTGeneration(MiniGoVisitor):
         elif ctx.FLOAT_LIT():
             return FloatLiteral(float(ctx.FLOAT_LIT().getText()))
         elif ctx.STRING_LIT():
-            return StringLiteral(ctx.STRING_LIT().getText()[1:-1]) #!!! Remove open and closed quotes
+            return StringLiteral(ctx.STRING_LIT().getText()) #??? Not? Remove open and closed quotes
         elif ctx.TRUE():
             return BooleanLiteral(True)
         elif ctx.FALSE():
@@ -432,14 +434,7 @@ class ASTGeneration(MiniGoVisitor):
             return IntLiteral(int(ctx.OCTAL_INT().getText(), 8))
         elif ctx.HEX_INT(): 
             return IntLiteral(int(ctx.HEX_INT().getText(), 16))
-
-    # compositeLit: arrayLit | structLit ;
-    def visitCompositeLit(self, ctx:MiniGoParser.CompositeLitContext):
-        if ctx.arrayLit():
-            return self.visit(ctx.arrayLit())
-        elif ctx.structLit():
-            return self.visit(ctx.structLit())
-
+        
     # arrayLit: arrayType arrayValue ;
     def visitArrayLit(self, ctx:MiniGoParser.ArrayLitContext):
         dimensions, elementType = self.visit(ctx.arrayType())

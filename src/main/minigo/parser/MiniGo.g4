@@ -308,13 +308,11 @@ callStmt: IDENTIFIER arguments | primaryExpr DOT IDENTIFIER arguments ; //???lhs
 returnStmt: RETURN expression | RETURN ;
 
 // Expression
-literal: basicLit | compositeLit ;
+literal: basicLit | arrayLit | structLit  ;
 
 basicLit: integerLit | FLOAT_LIT | STRING_LIT | TRUE | FALSE | NIL ;
 
 integerLit: DECIMAL_INT | BINARY_INT | OCTAL_INT | HEX_INT ;
-
-compositeLit: arrayLit | structLit ;
 
 arrayLit: arrayType arrayValue ;
 
