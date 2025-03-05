@@ -407,9 +407,9 @@ class ASTGeneration(MiniGoVisitor):
         if ctx.integerLit():
             return self.visit(ctx.integerLit())
         elif ctx.FLOAT_LIT():
-            return FloatLiteral(float(ctx.FLOAT_LIT().getText()))
+            return FloatLiteral(ctx.FLOAT_LIT().getText()) #??? Not type casted to float
         elif ctx.STRING_LIT():
-            return StringLiteral(ctx.STRING_LIT().getText()) #??? Not? Remove open and closed quotes
+            return StringLiteral(ctx.STRING_LIT().getText()) #??? Not Remove open and closed quotes
         elif ctx.TRUE():
             return BooleanLiteral(True)
         elif ctx.FALSE():
@@ -419,16 +419,7 @@ class ASTGeneration(MiniGoVisitor):
 
     # integerLit: DECIMAL_INT | BINARY_INT | OCTAL_INT | HEX_INT ;
     def visitIntegerLit(self, ctx:MiniGoParser.IntegerLitContext):
-        base = None
-        if ctx.DECIMAL_INT():
-            base = 10
-        elif ctx.BINARY_INT():
-            base = 2
-        elif ctx.OCTAL_INT():
-            base = 8
-        elif ctx.HEX_INT():
-            base = 16
-        return IntLiteral(int(ctx.getChild(0).getText(), base))
+        return IntLiteral(ctx.getChild(0).getText()) #??? Not type casted to int
         
     # arrayLit: arrayType arrayValue ;
     def visitArrayLit(self, ctx:MiniGoParser.ArrayLitContext):

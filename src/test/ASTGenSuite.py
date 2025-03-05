@@ -1,16 +1,6 @@
 import unittest
 from TestUtils import TestAST
 from AST import *
-
-def log(content, filename="./test/expect.txt"):
-    import inspect
-
-    # Get the function name that called log_to_file
-    caller_function = inspect.stack()[1].function
-
-    # Write to file
-    with open(filename, "a") as file:
-        file.write(f"{caller_function}: \n{content}\n\n")
         
 class ASTGenSuite(unittest.TestCase):
     def test_300(self):
@@ -73,7 +63,6 @@ class ASTGenSuite(unittest.TestCase):
                 )
             )
         ])
-        log(expect)
         self.assertTrue(TestAST.checkASTGen(input,str(expect),305))
 
     def test_306(self):
@@ -104,7 +93,6 @@ class ASTGenSuite(unittest.TestCase):
     def test_311(self):
         input = """var p Person = Person{name: "tin", age: 18};"""
         expect = Program([VarDecl("p", Id("Person"), StructLiteral("Person",[("name",StringLiteral("\"tin\"")), ("age",IntLiteral(18))])) ])
-        log(expect)
         self.assertTrue(TestAST.checkASTGen(input, str(expect), 311))
 
     def test_312(self):
@@ -137,7 +125,6 @@ class ASTGenSuite(unittest.TestCase):
     def test_317(self):
         input = """var flag boolean = a || b && c;"""
         expect = Program([VarDecl("flag", BoolType(), BinaryOp("||",Id("a"), BinaryOp("&&", Id("b"), Id("c"))))])
-        log(expect) 
         self.assertTrue(TestAST.checkASTGen(input, str(expect), 317))
 
     def test_318(self):
@@ -155,7 +142,6 @@ class ASTGenSuite(unittest.TestCase):
     def test_320(self):
         input = """func loop() { for i := 0; i < 10; i += 1 { print(i); }; };"""
         expect = Program([FuncDecl("loop", [], VoidType(), Block([ForStep(Assign(Id("i"), IntLiteral(0)), BinaryOp("<", Id("i"), IntLiteral(10)), Assign(Id("i"), BinaryOp("+", Id("i"), IntLiteral(1))), Block([FuncCall("print", [Id("i")])]))]))])
-        log(expect)
         self.assertTrue(TestAST.checkASTGen(input, str(expect), 320))
 
     def test_321(self):
@@ -407,10 +393,10 @@ class ASTGenSuite(unittest.TestCase):
 
     def test_337(self):
         """Test interface type with method prototype"""
-        input = """type Animal interface { makeSound() string; };"""
+        input = """type Animal interface { makeSound(a string) string; };"""
         expect = Program([
             InterfaceType("Animal", [
-                Prototype("makeSound", [], StringType())
+                Prototype("makeSound", [StringType()], StringType())
             ])
         ])
         self.assertTrue(TestAST.checkASTGen(input, str(expect), 337))
@@ -781,10 +767,9 @@ class ASTGenSuite(unittest.TestCase):
         """Test constant and variable declarations"""
         input = """const max = 0xA; var min float = 0.5;"""
         expect = Program([
-            ConstDecl("max", None, IntLiteral(10)),
+            ConstDecl("max", None, IntLiteral("0xA")),
             VarDecl("min", FloatType(), FloatLiteral(0.5))
         ])
-        log(expect)
         self.assertTrue(TestAST.checkASTGen(input, str(expect), 366))
 
     def test_367(self):

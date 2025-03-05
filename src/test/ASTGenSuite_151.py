@@ -134,16 +134,6 @@ class ASTGenSuite(unittest.TestCase):
 
     def test_017(self):
         input = """
-            type Votien interface {
-                Add(x, y int) int;
-            }
-"""
-        expect = Program([FuncDecl("votien",[],VoidType(),Block([VarDecl("a",IntType(), None),ConstDecl("a",None,NilLiteral())]))
-		])
-        self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
-
-    def test_017(self):
-        input = """
             func votien() {
                 var a int;
                 const a = nil;
@@ -301,7 +291,7 @@ class ASTGenSuite(unittest.TestCase):
         input = """
             const a = [1][3]float{1.};
 """
-        expect = Program([ConstDecl("a",None,ArrayLiteral([IntLiteral(1),IntLiteral(3)],FloatType(),[FloatLiteral(1.0)]))
+        expect = Program([ConstDecl("a",None,ArrayLiteral([IntLiteral(1),IntLiteral(3)],FloatType(),[FloatLiteral("1.")]))
 		])
         self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
 
@@ -478,7 +468,7 @@ class ASTGenSuite(unittest.TestCase):
         input = """
             const a = f() + f(1 + 2, 3.);
 """
-        expect = Program([ConstDecl("a",None,BinaryOp("+", FuncCall("f",[]), FuncCall("f",[BinaryOp("+", IntLiteral(1), IntLiteral(2)),FloatLiteral(3.0)])))
+        expect = Program([ConstDecl("a",None,BinaryOp("+", FuncCall("f",[]), FuncCall("f",[BinaryOp("+", IntLiteral(1), IntLiteral(2)),FloatLiteral("3.")])))
 		])
         self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
 
@@ -502,7 +492,7 @@ class ASTGenSuite(unittest.TestCase):
         input = """
             var a Votien = 1.;
 """
-        expect = Program([VarDecl("a",Id("Votien"),FloatLiteral(1.0))
+        expect = Program([VarDecl("a",Id("Votien"),FloatLiteral("1."))
 		])
         self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
 
@@ -737,7 +727,7 @@ class ASTGenSuite(unittest.TestCase):
                 const a = 1.;
             } 
 """
-        expect = Program([FuncDecl("foo",[],VoidType(),Block([ConstDecl("a",None,FloatLiteral(1.0))]))
+        expect = Program([FuncDecl("foo",[],VoidType(),Block([ConstDecl("a",None,FloatLiteral("1."))]))
 		])
         self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
 
@@ -748,7 +738,7 @@ class ASTGenSuite(unittest.TestCase):
                 var a = 1.;
             } 
 """
-        expect = Program([FuncDecl("foo",[],VoidType(),Block([VarDecl("a", None,FloatLiteral(1.0))]))
+        expect = Program([FuncDecl("foo",[],VoidType(),Block([VarDecl("a", None,FloatLiteral("1."))]))
 		])
         self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
 
@@ -999,22 +989,22 @@ class ASTGenSuite(unittest.TestCase):
     def test_102(self):
         """ chuyển đổi sang kiểu int hết """
         input = """const VoTien = 0b11; """
-        expect = Program([ConstDecl("VoTien", None, IntLiteral(3))])
+        expect = Program([ConstDecl("VoTien", None, IntLiteral("0b11"))])
         self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
 
     def test_103(self):
         input = """const VoTien = 0o70; """
-        expect = Program([ConstDecl("VoTien", None, IntLiteral(56))])
+        expect = Program([ConstDecl("VoTien", None, IntLiteral("0o70"))])
         self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
 
     def test_104(self):
         input = """const VoTien = 0Xa1; """
-        expect = Program([ConstDecl("VoTien", None, IntLiteral(161))])
+        expect = Program([ConstDecl("VoTien", None, IntLiteral("0Xa1"))])
         self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
 
     def test_105(self):
         input = """const VoTien = 01.e-1; """
-        expect = Program([ConstDecl("VoTien", None, FloatLiteral(0.1))])
+        expect = Program([ConstDecl("VoTien", None, FloatLiteral("01.e-1"))])
         self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
 
     def test_106(self):
@@ -1058,7 +1048,7 @@ class ASTGenSuite(unittest.TestCase):
 
     def test_113(self):
         input = """const VoTien = [1][2] int {1., STRUCT{}, nil}; """
-        expect = Program([ConstDecl("VoTien", None, ArrayLiteral([IntLiteral(1),IntLiteral(2)],IntType(),[FloatLiteral(1.0),StructLiteral("STRUCT",[]),NilLiteral()]))])
+        expect = Program([ConstDecl("VoTien", None, ArrayLiteral([IntLiteral(1),IntLiteral(2)],IntType(),[FloatLiteral("1."),StructLiteral("STRUCT",[]),NilLiteral()]))])
         self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
 
     def test_114(self):
@@ -1198,19 +1188,6 @@ class ASTGenSuite(unittest.TestCase):
         expect = Program([FuncDecl("foo",[ParamDecl("a",IntType())],VoidType(),Block([VarDecl("a", None,IntLiteral(1))])),
 			FuncDecl("foo",[ParamDecl("a",IntType()),ParamDecl("b",Id("ID"))],VoidType(),Block([VarDecl("a", None,IntLiteral(1))])),
 			FuncDecl("foo",[ParamDecl("a",IntType()),ParamDecl("b",IntType())],VoidType(),Block([VarDecl("a", None,IntLiteral(1))]))
-		])
-        self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
-
-
-    def test_133(self):
-        input = """
-    func (ID ID) foo () {var a = 1;}
-    func (ID ID) foo () int {var a = 1;}
-    func (ID ID) foo () [2] ID {var a = 1;}
-"""
-        expect = Program([MethodDecl("ID",Id("ID"),FuncDecl("foo",[],VoidType(),Block([VarDecl("a", None,IntLiteral(1))]))),
-			MethodDecl("ID",Id("ID"),FuncDecl("foo",[],IntType(),Block([VarDecl("a", None,IntLiteral(1))]))),
-			MethodDecl("ID",Id("ID"),FuncDecl("foo",[],ArrayType([IntLiteral(2)],Id("ID")),Block([VarDecl("a", None,IntLiteral(1))])))
 		])
         self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
 
@@ -1475,5 +1452,18 @@ class ASTGenSuite(unittest.TestCase):
         expect = Program([FuncDecl("foo",[],VoidType(),Block([
             Assign(ArrayCell(Id("a"),[BinaryOp("*", IntLiteral(1), IntLiteral(2)),BinaryOp("+", IntLiteral(1), IntLiteral(2))]),ArrayCell(Id("a"),[BinaryOp("*", IntLiteral(1), IntLiteral(2)),BinaryOp("+", IntLiteral(1), IntLiteral(2))])),
             Assign(ArrayCell(Id("a"),[BinaryOp("+", IntLiteral(1), IntLiteral(2))]),ArrayCell(Id("a"),[BinaryOp("+", IntLiteral(1), IntLiteral(2))]))]))
+		])
+        self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
+        
+    
+    def test_151(self):
+        input = """
+    func (ID ID) foo () {var a = 1;}
+    func (ID ID) foo () int {var a = 1;}
+    func (ID ID) foo () [2] ID {var a = 1;}
+"""
+        expect = Program([MethodDecl("ID",Id("ID"),FuncDecl("foo",[],VoidType(),Block([VarDecl("a", None,IntLiteral(1))]))),
+			MethodDecl("ID",Id("ID"),FuncDecl("foo",[],IntType(),Block([VarDecl("a", None,IntLiteral(1))]))),
+			MethodDecl("ID",Id("ID"),FuncDecl("foo",[],ArrayType([IntLiteral(2)],Id("ID")),Block([VarDecl("a", None,IntLiteral(1))])))
 		])
         self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
