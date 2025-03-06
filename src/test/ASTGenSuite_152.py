@@ -1467,3 +1467,9 @@ class ASTGenSuite(unittest.TestCase):
 			MethodDecl("ID",Id("ID"),FuncDecl("foo",[],ArrayType([IntLiteral(2)],Id("ID")),Block([VarDecl("a", None,IntLiteral(1))])))
 		])
         self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))
+    
+    def test_152(self):
+        input = """const VoTien = foo( a[0b1][3] ); """
+        expect = Program([ConstDecl("VoTien",None,FuncCall("foo",[ArrayCell(Id("a"),[IntLiteral("0b1"),IntLiteral(3)])]))
+        ])
+        self.assertTrue(TestAST.checkASTGen(input, str(expect), inspect.stack()[0].function))

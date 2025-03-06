@@ -411,9 +411,9 @@ class ASTGeneration(MiniGoVisitor):
         elif ctx.STRING_LIT():
             return StringLiteral(ctx.STRING_LIT().getText()) #??? Not Remove open and closed quotes
         elif ctx.TRUE():
-            return BooleanLiteral(True)
+            return BooleanLiteral(ctx.TRUE().getText()) #??? return "True" or "true"
         elif ctx.FALSE():
-            return BooleanLiteral(False)
+            return BooleanLiteral(ctx.FALSE().getText()) #??? return "False" or "false"
         elif ctx.NIL():
             return NilLiteral()
 
