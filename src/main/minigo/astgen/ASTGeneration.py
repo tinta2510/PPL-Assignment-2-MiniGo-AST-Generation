@@ -419,7 +419,7 @@ class ASTGeneration(MiniGoVisitor):
 
     # integerLit: DECIMAL_INT | BINARY_INT | OCTAL_INT | HEX_INT ;
     def visitIntegerLit(self, ctx:MiniGoParser.IntegerLitContext):
-        return IntLiteral(ctx.getChild(0).getText()) #??? Not type casted to int
+        return IntLiteral(ctx.getChild(0).getText())
         
     # arrayLit: arrayType arrayValue ;
     def visitArrayLit(self, ctx:MiniGoParser.ArrayLitContext):
